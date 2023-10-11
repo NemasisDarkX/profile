@@ -5,7 +5,7 @@ const path = require('path');
 
 const imageDir = path.join(__dirname, 'images');
 
-app.get('/random-image', (req, res) => {
+app.get('/image', (req, res) => {
   fs.readdir(imageDir, (err, files) => {
     if (err) {
       return res.status(500).send('Error reading image directory');
