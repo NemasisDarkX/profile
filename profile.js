@@ -1,41 +1,40 @@
 const express = require('express');
 const app = express();
-const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const imageData = [
-  { id: 1, url: 'https://ibb.co/Bry1LHf' },
-  { id: 2, url: 'https://ibb.co/YL9wJgd' },
-  { id: 3, url: 'https://ibb.co/99TfQhF' },
-];
+const imageDir = path.join(__dirname, 'images');
 
+app.get('/random-image', (req, res) => {
+  fs.readdir(imageDir, (err, files) => {
+    if (err) {
+      return res.status(500).send('Error reading image directory');
+    }
 
-const imagesDirectory = path.join(__dirname, 'images');
-if (!fs.existsSync(imagesDirectory)) {
-  fs.mkdirSync(imagesDirectory);
-}
+    const randomImage = files[Math.floor(Math.random() * files.length)];
+    const imagePath = path.join(imageDir, randomImage);
+    
+    // Determine the file extension
+    const fileExtension = path.extname(randomImage).toLowerCase();
 
-
-app.get('/random-image', async (req, res) => {
-  const randomIndex = Math.floor(Math.random() * imageData.length);
-  const randomImage = imageData[randomIndex];
-  const imageFileName = `image-${randomImage.id}.jpg`;
-  const imagePath = path.join(imagesDirectory, imageFileName);
-
- 
-  if (!fs.existsSync(imagePath)) {
-    const response = await axios({
-      url: randomImage.url,
-      method: 'GET',
-      responseType: 'stream',
+    const imageStream = fs.createReadStream(imagePath);
+    imageStream.on('open', () => {
+      // Set the appropriate Content-Type based on the file extension
+      if (fileExtension === '.png') {
+        res.set('Content-Type', 'image/png');
+      } else if (fileExtension === '.jpg' || fileExtension === '.jpeg') {
+        res.set('Content-Type', 'image/jpeg');
+      } else {
+        return res.status(500).send('Unsupported image format');
+      }
+      
+      imageStream.pipe(res);
     });
-    const writer = fs.createWriteStream(imagePath);
-    response.data.pipe(writer);
-    await new Promise((resolve) => writer.on('finish', resolve));
-  }
 
-  res.sendFile(imagePath);
+    imageStream.on('error', () => {
+      res.status(500).send('Error serving the image');
+    });
+  });
 });
 
 const port = process.env.PORT || 3000;
