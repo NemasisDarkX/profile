@@ -14,12 +14,12 @@ app.get('/random-image', (req, res) => {
     const randomImage = files[Math.floor(Math.random() * files.length)];
     const imagePath = path.join(imageDir, randomImage);
     
-    // Determine the file extension
+    
     const fileExtension = path.extname(randomImage).toLowerCase();
 
     const imageStream = fs.createReadStream(imagePath);
     imageStream.on('open', () => {
-      // Set the appropriate Content-Type based on the file extension
+      
       if (fileExtension === '.png') {
         res.set('Content-Type', 'image/png');
       } else if (fileExtension === '.jpg' || fileExtension === '.jpeg') {
