@@ -30,7 +30,7 @@ app.get('/image', async (req, res) => {
     await fs.promises.writeFile(filePath, response.data);
 
     
-    res.sendFile(filePath);
+    res.redirect(filePath);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error serving the image');
