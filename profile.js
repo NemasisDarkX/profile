@@ -1,40 +1,41 @@
 const express = require('express');
 const app = express();
-const fs = require('fs');
 const axios = require('axios');
+const fs = require('fs');
 const path = require('path');
-const data = require('./data.json');
 
-app.get('/image', async (req, res) => {
-  const randomIndex = Math.floor(Math.random() * data.length);
-  const randomImageUrls = data[randomIndex];
+const imageData = [
+  { id: 1, url: 'https://ibb.co/Bry1LHf' },
+  { id: 2, url: 'https://ibb.co/YL9wJgd' },
+  { id: 3, url: 'https://ibb.co/99TfQhF' },
+];
 
-  if (!randomImageUrls) {
-    return res.status(404).send('Image not found');
-  }
 
-  const randomImageIndex = Math.floor(Math.random() * Object.keys(randomImageUrls).length);
-  const imageUrl = randomImageUrls[randomImageIndex];
+const imagesDirectory = path.join(__dirname, 'images');
+if (!fs.existsSync(imagesDirectory)) {
+  fs.mkdirSync(imagesDirectory);
+}
 
-  try {
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
+
+app.get('/random-image', async (req, res) => {
+  const randomIndex = Math.floor(Math.random() * imageData.length);
+  const randomImage = imageData[randomIndex];
+  const imageFileName = `image-${randomImage.id}.jpg`;
+  const imagePath = path.join(imagesDirectory, imageFileName);
+
+ 
+  if (!fs.existsSync(imagePath)) {
+    const response = await axios({
+      url: randomImage.url,
+      method: 'GET',
+      responseType: 'stream',
     });
-
-    
-    const extension = path.extname(imageUrl);
-    const filename = `random-image-${randomIndex}-${randomImageIndex}${extension}`;
-    const filePath = path.join(__dirname, 'images', filename);
-
-  
-    await fs.promises.writeFile(filePath, response.data);
-
-    
-    res.redirect(filePath);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error serving the image');
+    const writer = fs.createWriteStream(imagePath);
+    response.data.pipe(writer);
+    await new Promise((resolve) => writer.on('finish', resolve));
   }
+
+  res.sendFile(imagePath);
 });
 
 const port = process.env.PORT || 3000;
