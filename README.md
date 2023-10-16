@@ -3,10 +3,6 @@ An api that gets random images from the image folder
  Upload images to the folder named images. Accepted formates:- png, jpg, jpeg.
  deploy this on any server!
 
-```bash
- $ npmi
-'''
+`` $npm i``
 
-```bash
- $ npmi
-'''
+`` $npm test``
